@@ -1,51 +1,88 @@
-import { Calculator } from 'lucide-react';
+import { ArrowRight, Phone, MapPin } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
 
+const HERO = 'https://lirp.cdn-website.com/7591cd42/dms3rep/multi/opt/Dadson%2811%29-1920w.jpg';
+
 const LandingPage = ({ onSelectMode }) => (
-  <div className="min-h-[calc(100vh-96px)] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-    {/* Extra gold glows for landing page */}
-    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold-500/10 rounded-full blur-[100px] pointer-events-none" />
-    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-gold-500/5 rounded-full blur-[100px] pointer-events-none" />
+  <div style={{ minHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column' }}>
 
-    <div className="relative z-10 w-full max-w-4xl">
-      <div className="text-center mb-16">
-        <img
-          src={logoUrl}
-          alt="Rocpal Logo"
-          className="h-40 object-contain mx-auto mb-8"
-          style={{ clipPath: 'inset(2px 8px 2px 8px round 8px)' }}
-        />
-        <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-4">
-          Rocpal Kitchen &amp; Bath Studio
+    {/* ── Hero ── */}
+    <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+      {/* Background image */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: `url(${HERO})`,
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        filter: 'brightness(0.28)',
+      }} />
+      {/* Gradient overlay */}
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)' }} />
+
+      {/* Content */}
+      <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '48px 24px', maxWidth: 720, width: '100%' }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+          <div style={{
+            borderRadius: 20, padding: 3,
+            background: 'linear-gradient(135deg, rgba(220,164,59,0.55), rgba(220,164,59,0.1))',
+            boxShadow: '0 0 40px rgba(220,164,59,0.25)',
+          }}>
+            <div style={{ background: 'rgba(0,0,0,0.85)', borderRadius: 18, overflow: 'hidden' }}>
+              <img src={logoUrl} alt="Rocpal" style={{ height: 120, width: 'auto', objectFit: 'contain', display: 'block', clipPath: 'inset(2px 8px 2px 8px round 12px)' }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Gold divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center', marginBottom: 20 }}>
+          <div style={{ height: 1, width: 60, background: 'linear-gradient(90deg, transparent, #dca43b)' }} />
+          <span style={{ color: '#dca43b', fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Est. Oshawa, ON</span>
+          <div style={{ height: 1, width: 60, background: 'linear-gradient(90deg, #dca43b, transparent)' }} />
+        </div>
+
+        <h1 style={{ fontSize: 'clamp(2rem,5vw,3.25rem)', fontWeight: 900, color: '#fff', lineHeight: 1.1, margin: '0 0 8px' }}>
+          Rocpal Custom Cabinets
         </h1>
-        <p className="text-lg text-zinc-400">Build your custom quote in minutes.</p>
-      </div>
+        <p style={{ fontSize: 'clamp(1rem,2.5vw,1.3rem)', fontWeight: 300, color: 'rgba(220,164,59,0.85)', letterSpacing: '0.06em', margin: '0 0 16px' }}>
+          Refining the Art of Cabinetry
+        </p>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 15, maxWidth: 480, margin: '0 auto 40px' }}>
+          Build a detailed materials quote for your kitchen, bath, built-ins, wine room, or millwork project — in minutes.
+        </p>
 
-      <div className="flex justify-center">
+        {/* CTA */}
         <button
           onClick={() => onSelectMode('regular')}
-          className="group relative bg-zinc-900/80 border border-zinc-800 rounded-3xl overflow-hidden shadow-soft hover:shadow-glow hover:border-gold-500/50 transition-all duration-500 text-left w-full max-w-xl backdrop-blur-sm"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10,
+            background: '#dca43b', color: '#000',
+            fontWeight: 800, fontSize: 15, letterSpacing: '0.06em', textTransform: 'uppercase',
+            padding: '16px 40px', borderRadius: 14, border: 'none', cursor: 'pointer',
+            boxShadow: '0 8px 32px rgba(220,164,59,0.4)',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#e8c97d'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = '#dca43b'; e.currentTarget.style.transform = 'none'; }}
         >
-          <div className="h-64 overflow-hidden">
-            <img
-              src="https://lirp.cdn-website.com/7591cd42/dms3rep/multi/opt/CorporalPatterson%2810%29-1920w.jpg"
-              className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
-              alt="Kitchen"
-            />
-          </div>
-          <div className="p-8 text-center">
-            <div className="text-gold-500 mb-4 flex justify-center">
-              <Calculator size={32} />
-            </div>
-            <h2 className="text-3xl font-bold text-white mb-3">Start Your Quote</h2>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              Custom cabinets, surfaces, hardware, vanities, built-ins, and complete millwork calculations.
-            </p>
-            <div className="mt-6 inline-block bg-gold-500 text-black font-bold px-8 py-3 rounded-xl text-sm uppercase tracking-wider">
-              Begin Quoting
-            </div>
-          </div>
+          Start Your Quote <ArrowRight size={18} />
         </button>
+      </div>
+    </div>
+
+    {/* ── Bottom info bar ── */}
+    <div style={{ background: 'rgba(0,0,0,0.9)', borderTop: '1px solid rgba(220,164,59,0.15)', padding: '18px 24px' }}>
+      <div className="max-w-7xl mx-auto" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+        <a href="tel:9054322066" style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>
+          <Phone size={14} color="#dca43b" /> (905) 432-2066
+        </a>
+        <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
+        <a href="mailto:info@rocpal.com" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>
+          info@rocpal.com
+        </a>
+        <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>
+          <MapPin size={13} color="#dca43b" /> 223 King St W, Oshawa, ON
+        </span>
       </div>
     </div>
   </div>

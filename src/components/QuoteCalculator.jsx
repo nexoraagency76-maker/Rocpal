@@ -1,7 +1,16 @@
 import { useState } from 'react';
-import { ShoppingCart, Plus, Minus, Trash2, Check, ArrowLeft, X } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, Check, ArrowLeft, X, Tag } from 'lucide-react';
 import { formatCurrency, calculateGrandTotal } from '../utils/calculator';
 import { getImageUrl } from '../data/inventory';
+
+/* ── shared style tokens ── */
+const S = {
+  card:   { background: '#111', border: '1px solid #222', borderRadius: 16 },
+  panel:  { background: '#0a0a0a', border: '1px solid #1a1a1a', borderRadius: 16 },
+  input:  { background: '#000', border: '1px solid #2a2a2a', borderRadius: 10, padding: '10px 14px', color: '#fff', width: '100%', outline: 'none', fontSize: 14 },
+  gold:   '#dca43b',
+  dim:    'rgba(255,255,255,0.45)',
+};
 
 const QuoteCalculator = ({
   db,
@@ -11,126 +20,138 @@ const QuoteCalculator = ({
   marginPercent, setMarginPercent,
 }) => {
   const [activeCategory, setActiveCategory] = useState(null);
-  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customPrice, setCustomPrice] = useState('');
 
-  const handleAddItem = (item) => {
+  const addItem = (item) =>
     setLineItems(prev => {
-      const existing = prev.find(i => i.item.id === item.id);
-      if (existing) return prev.map(i => i.item.id === item.id ? { ...i, qty: i.qty + 1 } : i);
-      return [...prev, { item, qty: 1 }];
+      const ex = prev.find(i => i.item.id === item.id);
+      return ex ? prev.map(i => i.item.id === item.id ? { ...i, qty: i.qty + 1 } : i)
+                : [...prev, { item, qty: 1 }];
     });
-  };
 
-  const updateQty = (id, newQty) => {
-    if (newQty > 0) setLineItems(prev => prev.map(i => i.item.id === id ? { ...i, qty: newQty } : i));
-  };
+  const setQty  = (id, q) => q > 0 && setLineItems(prev => prev.map(i => i.item.id === id ? { ...i, qty: q } : i));
+  const delItem = (id)    => setLineItems(prev => prev.filter(i => i.item.id !== id));
+  const delCustom = (id)  => setCustomItems(prev => prev.filter(i => i.id !== id));
 
-  const removeItem = (id) => setLineItems(prev => prev.filter(i => i.item.id !== id));
-
-  const handleAddCustom = (e) => {
+  const addCustom = (e) => {
     e.preventDefault();
     if (!customName || !customPrice) return;
-    setCustomItems(prev => [...prev, { id: `custom-${Date.now()}`, name: customName, price: parseFloat(customPrice), qty: 1 }]);
-    setCustomName('');
-    setCustomPrice('');
-    setShowCustomModal(false);
+    setCustomItems(prev => [...prev, { id: `c-${Date.now()}`, name: customName, price: parseFloat(customPrice), qty: 1 }]);
+    setCustomName(''); setCustomPrice(''); setShowModal(false);
   };
 
-  const removeCustomItem = (id) => setCustomItems(prev => prev.filter(i => i.id !== id));
-
-  const totals = calculateGrandTotal(lineItems, customItems, laborHours, shopRate, marginPercent);
-  const itemCount = lineItems.reduce((acc, i) => acc + i.qty, 0) + customItems.reduce((acc, i) => acc + i.qty, 0);
+  const totals    = calculateGrandTotal(lineItems, customItems, laborHours, 85, marginPercent);
+  const itemCount = lineItems.reduce((a, i) => a + i.qty, 0) + customItems.reduce((a, i) => a + i.qty, 0);
+  const categories = Object.keys(db);
 
   return (
-    <div className="min-h-[calc(100vh-96px)] pb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+    <div style={{ background: '#000', minHeight: 'calc(100vh - 80px)', paddingBottom: 60 }}>
+      <div className="max-w-7xl mx-auto" style={{ padding: '32px 16px' }}>
 
-          {/* Left: Storefront */}
-          <div className="lg:col-span-7 xl:col-span-8">
+        {/* Page header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+          <div>
+            <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 800, margin: 0 }}>Quote Builder</h2>
+            <p style={{ color: S.dim, fontSize: 13, margin: '4px 0 0' }}>Select materials and configure your project</p>
+          </div>
+          <button
+            onClick={() => setShowModal(true)}
+            style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(220,164,59,0.1)', border:'1px solid rgba(220,164,59,0.3)', borderRadius:10, padding:'9px 16px', color:S.gold, fontSize:13, fontWeight:600, cursor:'pointer' }}
+          >
+            <Plus size={14} /> Custom Item
+          </button>
+        </div>
+
+        {/* Two-column layout */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24, alignItems: 'start' }}>
+
+          {/* ── LEFT: Category grid / Item list ── */}
+          <div>
             {!activeCategory ? (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-white">Select Materials</h2>
-                  <button
-                    onClick={() => setShowCustomModal(true)}
-                    className="text-gold-500 font-medium text-sm flex items-center gap-1 hover:text-gold-400 bg-gold-500/10 px-3 py-1.5 rounded-lg transition-colors"
-                  >
-                    <Plus size={14} /> Custom Item
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {Object.keys(db).map(category => (
+              <>
+                <p style={{ color: S.dim, fontSize: 13, marginBottom: 16 }}>Choose a category to browse materials</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
+                  {categories.map(cat => (
                     <button
-                      key={category}
-                      onClick={() => setActiveCategory(category)}
-                      className="group relative h-48 rounded-2xl overflow-hidden shadow-soft flex items-end p-6 text-left transform transition duration-300 hover:-translate-y-1 hover:shadow-glow border border-zinc-800"
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      style={{
+                        position: 'relative', height: 160, borderRadius: 14, overflow: 'hidden',
+                        border: '1px solid #1e1e1e', cursor: 'pointer', background: '#111',
+                        transition: 'transform 0.2s, box-shadow 0.2s', textAlign: 'left', padding: 0,
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 24px rgba(220,164,59,0.2)'; e.currentTarget.style.borderColor = 'rgba(220,164,59,0.4)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = '#1e1e1e'; }}
                     >
-                      <div className="absolute inset-0 bg-zinc-900/40 group-hover:bg-zinc-900/20 transition-colors z-10"></div>
-                      <img
-                        src={getImageUrl(category)}
-                        className="absolute inset-0 w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-500"
-                        alt={category}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10"></div>
-                      <div className="relative z-20 w-full flex justify-between items-center">
-                        <h3 className="text-2xl font-bold text-white shadow-sm tracking-wide">{category}</h3>
-                        <div className="w-10 h-10 rounded-full bg-gold-500/20 backdrop-blur flex items-center justify-center text-gold-500 opacity-0 group-hover:opacity-100 transition-opacity border border-gold-500/30">
-                          <ArrowLeft size={16} style={{ transform: 'rotate(180deg)' }} />
-                        </div>
+                      <img src={getImageUrl(cat)} alt={cat} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', opacity:0.5 }} />
+                      <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.2) 100%)' }} />
+                      <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'14px 16px' }}>
+                        <div style={{ color:'#fff', fontWeight:700, fontSize:15 }}>{cat}</div>
+                        <div style={{ color:S.gold, fontSize:11, marginTop:2 }}>{db[cat].length} item{db[cat].length !== 1 ? 's' : ''}</div>
                       </div>
                     </button>
                   ))}
                 </div>
-              </div>
+              </>
             ) : (
-              <div className="space-y-6">
-                <div className="flex items-center gap-4">
+              <>
+                {/* Back + category name */}
+                <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
                   <button
                     onClick={() => setActiveCategory(null)}
-                    className="btn-icon bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-gold-500 shadow-sm"
+                    style={{ display:'flex', alignItems:'center', justifyContent:'center', width:36, height:36, borderRadius:'50%', background:'#111', border:'1px solid #222', color:'#aaa', cursor:'pointer' }}
                   >
                     <ArrowLeft size={16} />
                   </button>
-                  <h2 className="text-2xl font-bold text-white">{activeCategory}</h2>
+                  <h3 style={{ color:'#fff', fontSize:20, fontWeight:800, margin:0 }}>{activeCategory}</h3>
                 </div>
 
-                <div className="bg-zinc-900 rounded-2xl shadow-soft border border-zinc-800 overflow-hidden">
-                  {db[activeCategory].map((item) => {
+                {/* Item rows */}
+                <div style={{ ...S.card, overflow:'hidden' }}>
+                  {db[activeCategory].map((item, idx) => {
                     const inCart = lineItems.find(i => i.item.id === item.id);
                     return (
                       <div
                         key={item.id}
-                        className={`p-5 flex items-center justify-between border-b border-zinc-800 last:border-0 hover:bg-zinc-800/50 transition-colors ${inCart ? 'bg-gold-500/5' : ''}`}
+                        style={{
+                          display:'flex', alignItems:'center', gap:16, padding:'18px 20px',
+                          borderBottom: idx < db[activeCategory].length - 1 ? '1px solid #1a1a1a' : 'none',
+                          background: inCart ? 'rgba(220,164,59,0.04)' : 'transparent',
+                          transition: 'background 0.2s',
+                        }}
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 rounded-lg bg-black flex-shrink-0 overflow-hidden border border-zinc-800 shadow-inner">
-                            <img src={getImageUrl(item.category)} className="w-full h-full object-cover opacity-90" alt={item.name} />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-white text-lg">{item.name}</h4>
-                              {inCart && (
-                                <span className="bg-gold-500/20 text-gold-400 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-gold-500/30">
-                                  <Check size={10} /> Added
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-zinc-400 mt-1">
-                              {formatCurrency(item.price)}{item.unit !== 'ea' ? ` per ${item.unit}` : ''}
-                            </p>
-                            {item.note && <p className="text-xs text-gold-600 mt-1 font-medium">{item.note}</p>}
-                          </div>
+                        {/* Thumbnail */}
+                        <div style={{ width:64, height:64, borderRadius:10, overflow:'hidden', flexShrink:0, border:'1px solid #222' }}>
+                          <img src={getImageUrl(item.category)} alt={item.name} style={{ width:'100%', height:'100%', objectFit:'cover', opacity:0.85 }} />
                         </div>
+
+                        {/* Info */}
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                            <span style={{ color:'#fff', fontWeight:700, fontSize:15 }}>{item.name}</span>
+                            {inCart && (
+                              <span style={{ background:'rgba(220,164,59,0.15)', border:'1px solid rgba(220,164,59,0.3)', color:S.gold, fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99, display:'flex', alignItems:'center', gap:3 }}>
+                                <Check size={9} /> Added
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ color:S.dim, fontSize:13, marginTop:3 }}>
+                            {formatCurrency(item.price)}{item.unit !== 'ea' ? ` / ${item.unit}` : ''}
+                          </div>
+                          {item.note && <div style={{ color:S.gold, fontSize:11, marginTop:2 }}>{item.note}</div>}
+                        </div>
+
+                        {/* Add button */}
                         <button
-                          onClick={() => handleAddItem(item)}
-                          className={`px-5 py-2.5 rounded-xl font-bold transition-all ml-4 flex-shrink-0 ${inCart
-                            ? 'bg-black border border-gold-500/50 text-gold-500 hover:bg-zinc-900'
-                            : 'bg-gold-500 text-black hover:bg-gold-400 shadow-[0_0_15px_rgba(220,164,59,0.3)]'
-                          }`}
+                          onClick={() => addItem(item)}
+                          style={{
+                            flexShrink:0, padding:'10px 20px', borderRadius:10, fontWeight:700, fontSize:13, cursor:'pointer', border:'none', transition:'all 0.15s',
+                            ...(inCart
+                              ? { background:'transparent', border:'1px solid rgba(220,164,59,0.4)', color:S.gold }
+                              : { background:S.gold, color:'#000', boxShadow:'0 4px 16px rgba(220,164,59,0.3)' }),
+                          }}
                         >
                           {inCart ? 'Add More' : 'Add to Quote'}
                         </button>
@@ -138,169 +159,144 @@ const QuoteCalculator = ({
                     );
                   })}
                 </div>
-              </div>
-            )}
-
-            {/* Custom Item Modal */}
-            {showCustomModal && (
-              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 w-full max-w-md relative">
-                  <button onClick={() => setShowCustomModal(false)} className="absolute top-4 right-4 text-zinc-500 hover:text-white">
-                    <X size={20} />
-                  </button>
-                  <h3 className="text-xl font-bold text-white mb-6">Add Custom Item</h3>
-                  <form onSubmit={handleAddCustom} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-400 mb-1">Item Description</label>
-                      <input
-                        type="text"
-                        value={customName}
-                        onChange={e => setCustomName(e.target.value)}
-                        className="input-field"
-                        placeholder="e.g. Bosch Dishwasher"
-                        autoFocus
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-400 mb-1">Total Price ($)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={customPrice}
-                        onChange={e => setCustomPrice(e.target.value)}
-                        className="input-field"
-                        placeholder="0.00"
-                        required
-                      />
-                    </div>
-                    <button type="submit" className="btn-primary w-full mt-2">Add to Quote</button>
-                  </form>
-                </div>
-              </div>
+              </>
             )}
           </div>
 
-          {/* Right: Quote Summary */}
-          <div className="lg:col-span-5 xl:col-span-4">
-            <div className="glass-panel sticky top-28 flex flex-col max-h-[calc(100vh-120px)] border-zinc-800">
-              <div className="p-6 border-b border-zinc-800 bg-black/50 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <ShoppingCart size={20} /> Quote Summary
-                </h2>
-                <span className="bg-gold-500 text-black text-xs font-bold px-2.5 py-1 rounded-full">{itemCount} items</span>
+          {/* ── RIGHT: Quote summary ── */}
+          <div style={{ ...S.panel, position:'sticky', top:100, display:'flex', flexDirection:'column', maxHeight:'calc(100vh - 120px)' }}>
+            {/* Summary header */}
+            <div style={{ padding:'20px 22px', borderBottom:'1px solid #1a1a1a', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, color:'#fff', fontWeight:700, fontSize:16 }}>
+                <ShoppingCart size={18} color={S.gold} /> Quote Summary
               </div>
+              <span style={{ background:S.gold, color:'#000', fontWeight:800, fontSize:11, padding:'3px 10px', borderRadius:99 }}>{itemCount}</span>
+            </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-zinc-900">
-                {lineItems.length === 0 && customItems.length === 0 ? (
-                  <div className="text-center py-10 text-zinc-600">
-                    <div className="flex justify-center mb-3 opacity-30"><ShoppingCart size={40} /></div>
-                    <p>Your quote is empty.</p>
-                    <p className="text-sm mt-1">Select categories to add items.</p>
-                  </div>
-                ) : (
-                  <>
-                    {lineItems.map(({ item, qty }) => (
-                      <div key={item.id} className="flex gap-4 group">
-                        <div className="w-16 h-16 rounded-xl bg-black flex-shrink-0 overflow-hidden border border-zinc-800">
-                          <img src={getImageUrl(item.category)} className="w-full h-full object-cover opacity-80" alt={item.name} />
+            {/* Item scroll area */}
+            <div style={{ flex:1, overflowY:'auto', padding:'16px 22px' }}>
+              {lineItems.length === 0 && customItems.length === 0 ? (
+                <div style={{ textAlign:'center', padding:'40px 0', color:'#333' }}>
+                  <ShoppingCart size={36} style={{ margin:'0 auto 12px', display:'block', opacity:0.3 }} />
+                  <p style={{ margin:0 }}>Your quote is empty.</p>
+                  <p style={{ margin:'4px 0 0', fontSize:12 }}>Select a category to add items.</p>
+                </div>
+              ) : (
+                <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+                  {lineItems.map(({ item, qty }) => (
+                    <div key={item.id} style={{ display:'flex', gap:12 }}>
+                      <div style={{ width:52, height:52, borderRadius:10, overflow:'hidden', flexShrink:0, border:'1px solid #222' }}>
+                        <img src={getImageUrl(item.category)} alt={item.name} style={{ width:'100%', height:'100%', objectFit:'cover', opacity:0.8 }} />
+                      </div>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                          <span style={{ color:'#fff', fontWeight:600, fontSize:13, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', paddingRight:8 }}>{item.name}</span>
+                          <span style={{ color:S.gold, fontWeight:700, fontSize:13, flexShrink:0 }}>{formatCurrency(item.price * qty)}</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start">
-                            <h4 className="font-semibold text-white text-sm truncate pr-2">{item.name}</h4>
-                            <span className="font-bold text-gold-400 text-sm whitespace-nowrap">{formatCurrency(item.price * qty)}</span>
+                        <div style={{ color:S.dim, fontSize:11, marginTop:2 }}>{formatCurrency(item.price)}{item.unit !== 'ea' ? ` / ${item.unit}` : ''}</div>
+                        <div style={{ display:'flex', alignItems:'center', gap:10, marginTop:8 }}>
+                          <div style={{ display:'flex', alignItems:'center', background:'#000', border:'1px solid #222', borderRadius:8 }}>
+                            <button onClick={() => setQty(item.id, qty-1)} style={{ background:'none', border:'none', color:'#666', cursor:'pointer', padding:'4px 8px', display:'flex' }}><Minus size={12}/></button>
+                            <span style={{ color:'#fff', fontSize:12, fontWeight:600, width:22, textAlign:'center' }}>{qty}</span>
+                            <button onClick={() => setQty(item.id, qty+1)} style={{ background:'none', border:'none', color:'#666', cursor:'pointer', padding:'4px 8px', display:'flex' }}><Plus size={12}/></button>
                           </div>
-                          <p className="text-xs text-zinc-500 mt-0.5">{formatCurrency(item.price)}{item.unit !== 'ea' ? ` / ${item.unit}` : ''}</p>
-                          <div className="flex items-center gap-3 mt-2">
-                            <div className="flex items-center bg-black border border-zinc-800 rounded-lg">
-                              <button onClick={() => updateQty(item.id, qty - 1)} className="px-2 py-1 text-zinc-500 hover:text-white"><Minus size={14} /></button>
-                              <span className="text-xs font-medium w-6 text-center text-white">{qty}</span>
-                              <button onClick={() => updateQty(item.id, qty + 1)} className="px-2 py-1 text-zinc-500 hover:text-white"><Plus size={14} /></button>
-                            </div>
-                            <button onClick={() => removeItem(item.id)} className="text-zinc-600 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
-                          </div>
+                          <button onClick={() => delItem(item.id)} style={{ background:'none', border:'none', color:'#444', cursor:'pointer', display:'flex', padding:0 }}><Trash2 size={13}/></button>
                         </div>
                       </div>
-                    ))}
+                    </div>
+                  ))}
 
-                    {customItems.map((item) => (
-                      <div key={item.id} className="flex gap-4 group">
-                        <div className="w-16 h-16 rounded-xl bg-black flex-shrink-0 flex items-center justify-center border border-zinc-800 text-zinc-600">
-                          <Plus size={20} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start">
-                            <h4 className="font-semibold text-white text-sm truncate pr-2">{item.name}</h4>
-                            <span className="font-bold text-gold-400 text-sm whitespace-nowrap">{formatCurrency(item.price)}</span>
-                          </div>
-                          <p className="text-xs text-zinc-500 mt-0.5">Custom Item</p>
-                          <div className="mt-2">
-                            <button onClick={() => removeCustomItem(item.id)} className="text-zinc-600 hover:text-red-500 text-xs flex items-center gap-1 transition-colors">
-                              <Trash2 size={12} /> Remove
-                            </button>
-                          </div>
-                        </div>
+                  {customItems.map(item => (
+                    <div key={item.id} style={{ display:'flex', gap:12 }}>
+                      <div style={{ width:52, height:52, borderRadius:10, flexShrink:0, border:'1px solid #222', background:'#0a0a0a', display:'flex', alignItems:'center', justifyContent:'center', color:'#333' }}>
+                        <Tag size={18}/>
                       </div>
-                    ))}
-                  </>
-                )}
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between' }}>
+                          <span style={{ color:'#fff', fontWeight:600, fontSize:13 }}>{item.name}</span>
+                          <span style={{ color:S.gold, fontWeight:700, fontSize:13 }}>{formatCurrency(item.price)}</span>
+                        </div>
+                        <div style={{ color:S.dim, fontSize:11, marginTop:2 }}>Custom item</div>
+                        <button onClick={() => delCustom(item.id)} style={{ background:'none', border:'none', color:'#444', cursor:'pointer', display:'flex', alignItems:'center', gap:4, fontSize:11, marginTop:6, padding:0 }}>
+                          <Trash2 size={12}/> Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Labor + totals */}
+            <div style={{ padding:'18px 22px', borderTop:'1px solid #1a1a1a', background:'#000', borderBottomLeftRadius:16, borderBottomRightRadius:16 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 }}>
+                <div>
+                  <label style={{ display:'block', color:'#555', fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:4 }}>Labor Hrs</label>
+                  <input type="number" min="0" value={laborHours} onChange={e => setLaborHours(parseFloat(e.target.value)||0)} style={S.input} />
+                </div>
+                <div>
+                  <label style={{ display:'block', color:'#555', fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:4 }}>Margin %</label>
+                  <input type="number" min="0" value={marginPercent} onChange={e => setMarginPercent(parseFloat(e.target.value)||0)} style={S.input} />
+                </div>
               </div>
 
-              {/* Labor & Totals */}
-              <div className="bg-black p-6 border-t border-zinc-800 space-y-4">
-                <div className="grid grid-cols-2 gap-3 mb-2">
-                  <div>
-                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Labor Hrs</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={laborHours}
-                      onChange={e => setLaborHours(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-gold-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Margin %</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={marginPercent}
-                      onChange={e => setMarginPercent(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-gold-500 outline-none"
-                    />
-                  </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:8, fontSize:13, marginBottom:16 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', color:S.dim }}>
+                  <span>Subtotal</span>
+                  <span style={{ color:'#fff' }}>{formatCurrency(totals.subTotal)}</span>
                 </div>
+                <div style={{ display:'flex', justifyContent:'space-between', color:S.dim }}>
+                  <span>Margin ({marginPercent}%)</span>
+                  <span style={{ color:S.gold }}>+{formatCurrency(totals.marginAmount)}</span>
+                </div>
+              </div>
 
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Subtotal (Materials + Labor)</span>
-                    <span className="font-medium text-white">{formatCurrency(totals.subTotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Profit Margin ({marginPercent}%)</span>
-                    <span className="font-medium text-gold-500">+{formatCurrency(totals.marginAmount)}</span>
-                  </div>
+              <div style={{ borderTop:'1px solid #1a1a1a', paddingTop:16 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:16 }}>
+                  <span style={{ color:'#fff', fontWeight:700, fontSize:15 }}>Grand Total</span>
+                  <span style={{ color:S.gold, fontWeight:900, fontSize:28, letterSpacing:'-0.02em' }}>{formatCurrency(totals.grandTotal)}</span>
                 </div>
-
-                <div className="pt-4 border-t border-zinc-800">
-                  <div className="flex justify-between items-end mb-4">
-                    <span className="text-base font-bold text-white">Grand Total</span>
-                    <span className="text-3xl font-extrabold text-gold-500 tracking-tight">{formatCurrency(totals.grandTotal)}</span>
-                  </div>
-                  <button
-                    className="btn-primary w-full py-4 text-lg"
-                    onClick={() => alert('Quote Saved! (Implement print/export logic here)')}
-                  >
-                    Generate Proposal
-                  </button>
-                </div>
+                <button
+                  onClick={() => alert('Quote ready! (Add print/export logic here)')}
+                  style={{
+                    width:'100%', padding:'14px', background:S.gold, color:'#000', fontWeight:800, fontSize:14,
+                    borderRadius:12, border:'none', cursor:'pointer', letterSpacing:'0.04em',
+                    boxShadow:'0 4px 24px rgba(220,164,59,0.35)', transition:'all 0.2s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background='#e8c97d'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background=S.gold; }}
+                >
+                  Generate Proposal
+                </button>
               </div>
             </div>
           </div>
 
         </div>
       </div>
+
+      {/* ── Custom item modal ── */}
+      {showModal && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(8px)', zIndex:100, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+          <div style={{ ...S.card, width:'100%', maxWidth:420, padding:28, position:'relative' }}>
+            <button onClick={() => setShowModal(false)} style={{ position:'absolute', top:16, right:16, background:'none', border:'none', color:'#555', cursor:'pointer', display:'flex' }}><X size={20}/></button>
+            <h3 style={{ color:'#fff', fontSize:18, fontWeight:800, margin:'0 0 24px' }}>Add Custom Item</h3>
+            <form onSubmit={addCustom} style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <div>
+                <label style={{ display:'block', color:S.dim, fontSize:12, fontWeight:600, marginBottom:6 }}>Description</label>
+                <input type="text" value={customName} onChange={e=>setCustomName(e.target.value)} style={S.input} placeholder="e.g. Bosch Dishwasher" autoFocus required />
+              </div>
+              <div>
+                <label style={{ display:'block', color:S.dim, fontSize:12, fontWeight:600, marginBottom:6 }}>Price ($)</label>
+                <input type="number" step="0.01" min="0" value={customPrice} onChange={e=>setCustomPrice(e.target.value)} style={S.input} placeholder="0.00" required />
+              </div>
+              <button type="submit" style={{ background:S.gold, color:'#000', fontWeight:800, fontSize:14, padding:'13px', borderRadius:10, border:'none', cursor:'pointer', marginTop:4 }}>
+                Add to Quote
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
