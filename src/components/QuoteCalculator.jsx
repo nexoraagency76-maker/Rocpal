@@ -44,7 +44,7 @@ const QuoteCalculator = ({
   const itemCount = lineItems.reduce((acc, i) => acc + i.qty, 0) + customItems.reduce((acc, i) => acc + i.qty, 0);
 
   return (
-    <div className="min-h-[calc(100vh-80px)] pb-20 regular-bg">
+    <div className="min-h-[calc(100vh-96px)] pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import GlobalHeader from './components/GlobalHeader';
 import LandingPage from './components/LandingPage';
 import QuoteCalculator from './components/QuoteCalculator';
+import StarBackground from './components/StarBackground';
 import { regularData } from './data/inventory';
 
 function App() {
@@ -32,19 +33,22 @@ function App() {
   }, [regLineItems, regCustomItems, laborHours, marginPercent]);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <GlobalHeader mode={mode} onHome={() => setMode('landing')} />
-      {mode === 'landing' && <LandingPage onSelectMode={setMode} />}
-      {mode === 'regular' && (
-        <QuoteCalculator
-          db={regularData}
-          lineItems={regLineItems} setLineItems={setRegLineItems}
-          customItems={regCustomItems} setCustomItems={setRegCustomItems}
-          laborHours={laborHours} setLaborHours={setLaborHours}
-          shopRate={shopRate}
-          marginPercent={marginPercent} setMarginPercent={setMarginPercent}
-        />
-      )}
+    <div className="flex flex-col min-h-screen relative">
+      <StarBackground />
+      <div className="relative z-10 flex flex-col min-h-screen">
+        <GlobalHeader mode={mode} onHome={() => setMode('landing')} />
+        {mode === 'landing' && <LandingPage onSelectMode={setMode} />}
+        {mode === 'regular' && (
+          <QuoteCalculator
+            db={regularData}
+            lineItems={regLineItems} setLineItems={setRegLineItems}
+            customItems={regCustomItems} setCustomItems={setRegCustomItems}
+            laborHours={laborHours} setLaborHours={setLaborHours}
+            shopRate={shopRate}
+            marginPercent={marginPercent} setMarginPercent={setMarginPercent}
+          />
+        )}
+      </div>
     </div>
   );
 }

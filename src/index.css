@@ -4,7 +4,8 @@
 
 @layer base {
   body {
-    @apply bg-black text-zinc-200 antialiased font-sans;
+    @apply text-zinc-200 antialiased font-sans;
+    background: transparent;
   }
 }
 
@@ -36,6 +37,15 @@
   .regular-bg {
     @apply bg-black;
   }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: var(--tw-opacity, 1); transform: scale(1); }
+  50% { opacity: calc(var(--tw-opacity, 1) * 0.2); transform: scale(0.8); }
+}
+
+.star-twinkle {
+  animation: twinkle var(--duration, 4s) ease-in-out infinite;
 }
 
 ::-webkit-scrollbar {

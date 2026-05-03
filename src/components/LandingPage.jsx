@@ -1,11 +1,11 @@
-import React from 'react';
 import { Calculator } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
 
 const LandingPage = ({ onSelectMode }) => (
-  <div className="min-h-[calc(100vh-80px)] bg-black flex flex-col items-center justify-center p-4 relative overflow-hidden">
-    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold-500/10 rounded-full blur-[100px]"></div>
-    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-gold-500/5 rounded-full blur-[100px]"></div>
+  <div className="min-h-[calc(100vh-96px)] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    {/* Extra gold glows for landing page */}
+    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold-500/10 rounded-full blur-[100px] pointer-events-none" />
+    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-gold-500/5 rounded-full blur-[100px] pointer-events-none" />
 
     <div className="relative z-10 w-full max-w-4xl">
       <div className="text-center mb-16">
@@ -24,7 +24,7 @@ const LandingPage = ({ onSelectMode }) => (
       <div className="flex justify-center">
         <button
           onClick={() => onSelectMode('regular')}
-          className="group relative bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-soft hover:shadow-glow hover:border-gold-500/50 transition-all duration-500 text-left w-full max-w-xl"
+          className="group relative bg-zinc-900/80 border border-zinc-800 rounded-3xl overflow-hidden shadow-soft hover:shadow-glow hover:border-gold-500/50 transition-all duration-500 text-left w-full max-w-xl backdrop-blur-sm"
         >
           <div className="h-64 overflow-hidden">
             <img
