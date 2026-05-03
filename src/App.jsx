@@ -1,77 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import GlobalHeader from './components/GlobalHeader';
 import LandingPage from './components/LandingPage';
 import QuoteCalculator from './components/QuoteCalculator';
+import { regularData } from './data/inventory';
 
 function App() {
-  const [started, setStarted] = useState(false);
-  
-  // State for Quoting
-  const [lineItems, setLineItems] = useState([]);
-  const [customItems, setCustomItems] = useState([]);
+  const [mode, setMode] = useState('landing');
+  const [regLineItems, setRegLineItems] = useState([]);
+  const [regCustomItems, setRegCustomItems] = useState([]);
   const [laborHours, setLaborHours] = useState(0);
-  const [shopRate, setShopRate] = useState(85);
+  const [shopRate] = useState(85);
   const [marginPercent, setMarginPercent] = useState(30);
 
-  // Load from localStorage on initial mount
   useEffect(() => {
-    const savedQuote = localStorage.getItem('cabinetryQuoteState');
-    if (savedQuote) {
+    const saved = localStorage.getItem('rocpal_quoteState');
+    if (saved) {
       try {
-        const parsed = JSON.parse(savedQuote);
-        setLineItems(parsed.lineItems || []);
-        setCustomItems(parsed.customItems || []);
-        setLaborHours(parsed.laborHours || 0);
-        setShopRate(parsed.shopRate || 85);
-        setMarginPercent(parsed.marginPercent || 30);
-        setStarted(parsed.started || false);
-      } catch (e) {
-        console.error("Failed to load saved quote data", e);
-      }
+        const p = JSON.parse(saved);
+        if (p.regLineItems) setRegLineItems(p.regLineItems);
+        if (p.regCustomItems) setRegCustomItems(p.regCustomItems);
+        if (p.laborHours) setLaborHours(p.laborHours);
+        if (p.marginPercent) setMarginPercent(p.marginPercent);
+      } catch (e) {}
     }
   }, []);
 
-  // Save to localStorage whenever quote state changes
   useEffect(() => {
-    const stateToSave = {
-      started,
-      lineItems,
-      customItems,
-      laborHours,
-      shopRate,
-      marginPercent
-    };
-    localStorage.setItem('cabinetryQuoteState', JSON.stringify(stateToSave));
-  }, [started, lineItems, customItems, laborHours, shopRate, marginPercent]);
-
-  const handleReset = () => {
-    if (window.confirm("Are you sure you want to start a new quote? This will clear all current items.")) {
-      setLineItems([]);
-      setCustomItems([]);
-      setLaborHours(0);
-      setMarginPercent(30);
-      // Keep shop rate as it's usually consistent
-    }
-  };
-
-  if (!started) {
-    return <LandingPage onStart={() => setStarted(true)} />;
-  }
+    localStorage.setItem('rocpal_quoteState', JSON.stringify({
+      regLineItems, regCustomItems, laborHours, marginPercent,
+    }));
+  }, [regLineItems, regCustomItems, laborHours, marginPercent]);
 
   return (
-    <div className="min-h-screen">
-      <QuoteCalculator 
-        lineItems={lineItems}
-        setLineItems={setLineItems}
-        customItems={customItems}
-        setCustomItems={setCustomItems}
-        laborHours={laborHours}
-        setLaborHours={setLaborHours}
-        shopRate={shopRate}
-        setShopRate={setShopRate}
-        marginPercent={marginPercent}
-        setMarginPercent={setMarginPercent}
-        onReset={handleReset}
-      />
+    <div className="flex flex-col min-h-screen">
+      <GlobalHeader mode={mode} onHome={() => setMode('landing')} />
+      {mode === 'landing' && <LandingPage onSelectMode={setMode} />}
+      {mode === 'regular' && (
+        <QuoteCalculator
+          db={regularData}
+          lineItems={regLineItems} setLineItems={setRegLineItems}
+          customItems={regCustomItems} setCustomItems={setRegCustomItems}
+          laborHours={laborHours} setLaborHours={setLaborHours}
+          shopRate={shopRate}
+          marginPercent={marginPercent} setMarginPercent={setMarginPercent}
+        />
+      )}
     </div>
   );
 }

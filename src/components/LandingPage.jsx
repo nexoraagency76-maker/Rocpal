@@ -1,51 +1,54 @@
 import React from 'react';
-import { Calculator, Hammer, Ruler } from 'lucide-react';
+import { Calculator } from 'lucide-react';
+import logoUrl from '../assets/logo.png';
 
-const LandingPage = ({ onStart }) => {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800 to-slate-950 p-6 relative overflow-hidden">
-      {/* Decorative Wood Accent */}
-      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-wood-700 via-wood-400 to-wood-600"></div>
-      
-      <div className="glass-panel p-12 md:p-16 rounded-2xl max-w-3xl w-full text-center relative z-10">
-        <div className="flex justify-center mb-6">
-          <div className="bg-slate-900 p-4 rounded-full border border-slate-700 shadow-inner">
-            <Calculator size={48} className="text-wood-400" />
-          </div>
-        </div>
-        
-        <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">
-          Precision <span className="text-transparent bg-clip-text bg-gradient-to-r from-wood-300 to-wood-500">Quoting</span>
+const LandingPage = ({ onSelectMode }) => (
+  <div className="min-h-[calc(100vh-80px)] bg-black flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold-500/10 rounded-full blur-[100px]"></div>
+    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-gold-500/5 rounded-full blur-[100px]"></div>
+
+    <div className="relative z-10 w-full max-w-4xl">
+      <div className="text-center mb-16">
+        <img
+          src={logoUrl}
+          alt="Rocpal Logo"
+          className="h-40 object-contain mx-auto mb-8"
+          style={{ clipPath: 'inset(2px 8px 2px 8px round 8px)' }}
+        />
+        <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-4">
+          Rocpal Kitchen &amp; Bath Studio
         </h1>
-        <p className="text-slate-400 text-lg md:text-xl mb-12 max-w-xl mx-auto">
-          Professional cabinetry and stone surface estimations. Built for accuracy, tailored for your shop.
-        </p>
-        
-        <button 
-          onClick={onStart}
-          className="btn-primary text-lg w-full md:w-auto md:px-12 py-4"
-        >
-          <Hammer size={20} />
-          Get a Quote Now
-        </button>
+        <p className="text-lg text-zinc-400">Build your custom quote in minutes.</p>
+      </div>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 text-slate-500">
-          <div className="flex flex-col items-center">
-            <Ruler size={24} className="mb-2 text-slate-400" />
-            <span className="text-sm font-medium">Accurate SqFt Math</span>
+      <div className="flex justify-center">
+        <button
+          onClick={() => onSelectMode('regular')}
+          className="group relative bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-soft hover:shadow-glow hover:border-gold-500/50 transition-all duration-500 text-left w-full max-w-xl"
+        >
+          <div className="h-64 overflow-hidden">
+            <img
+              src="https://lirp.cdn-website.com/7591cd42/dms3rep/multi/opt/CorporalPatterson%2810%29-1920w.jpg"
+              className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
+              alt="Kitchen"
+            />
           </div>
-          <div className="flex flex-col items-center">
-            <Hammer size={24} className="mb-2 text-slate-400" />
-            <span className="text-sm font-medium">Salice Hardware</span>
+          <div className="p-8 text-center">
+            <div className="text-gold-500 mb-4 flex justify-center">
+              <Calculator size={32} />
+            </div>
+            <h2 className="text-3xl font-bold text-white mb-3">Start Your Quote</h2>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              Custom cabinets, surfaces, hardware, vanities, built-ins, and complete millwork calculations.
+            </p>
+            <div className="mt-6 inline-block bg-gold-500 text-black font-bold px-8 py-3 rounded-xl text-sm uppercase tracking-wider">
+              Begin Quoting
+            </div>
           </div>
-          <div className="flex flex-col items-center">
-            <Calculator size={24} className="mb-2 text-slate-400" />
-            <span className="text-sm font-medium">Custom Overrides</span>
-          </div>
-        </div>
+        </button>
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 export default LandingPage;
